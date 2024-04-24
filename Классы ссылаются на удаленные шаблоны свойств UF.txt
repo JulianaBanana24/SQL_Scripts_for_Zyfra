@@ -1,0 +1,15 @@
+SELECT
+distinct(cs.id) as class_id,
+cs.name as class_name,
+cs.isdeleted as class_isdeleted,
+pp.id as propertyprimitive_id,
+pp.name as propertyprimitive_name,
+pp.isdeleted as propertyprimitive_isdeleted
+FROM
+public.classespropertyprimitives_l p
+INNER JOIN public.classes_s cs ON
+p.classid = cs.id
+LEFT JOIN public.propertyprimitives_s pp ON 
+p.propertyprimitiveid = pp.id
+WHERE
+p.isdeleted = false and p.tt is NULL and cs.isdeleted = false and cs.tt is null and pp.isdeleted = true and pp.tt is null

@@ -1,0 +1,9 @@
+SELECT distinct
+             mdl.name as Model, os2."path"  as Obj_path, os.name as obj_name, p."id" as prop_id, p."propertyprimitiveid" as prop_propertyprimitiveid, p."name" as prop_name, p."tt" as prop_tt, p."isdeleted" as prop_isdeleted             
+FROM public.properties_s as p
+left join public.propertyprimitives_s as pr on pr."id" = p."propertyprimitiveid"
+left join public.objects_s os on p.parentid = os.id 
+left join public.modelsobjects_l ml on os.id = ml.objectid 
+left join public.models_s mdl on ml.modelid = mdl.id
+left join public.objectspath_s os2 on os2.id = os.id 
+where p."tt" is NULL and p."isdeleted" is false and pr."id" is null and p."propertyprimitiveid" is not null --активные не удаленные свойства с прототипами которых никогда не было в БД

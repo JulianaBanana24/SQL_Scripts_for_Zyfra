@@ -1,0 +1,14 @@
+select *
+from 
+    (
+        select *
+        from
+(
+select mds.name as Model_prototype,  pp.id as primitiveid, pp.name, pp.tt,  ps.id as configurationid
+    from public.propertyprimitives_s pp
+    left join propertyprimitiveconfigurations_s ps on pp.id = ps.id
+	left join propertyprimitives_h as pph on pp.id = pph.id
+	left join modelprototypes_s as mds on pph.modelprototypeid = mds.id
+) aa
+where aa.tt is null) bb
+where bb.configurationid is null

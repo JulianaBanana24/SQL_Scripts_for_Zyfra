@@ -1,0 +1,42 @@
+
+with
+my_var(data_reference_var) as
+(values('065a9d19-259d-4293-93d2-9447e098e7b7')),
+
+VARI (id, variables) as
+(select distinct p."id" as Property_id, p."variables" as Property_variables  
+from
+(select
+             c."id" as id,
+            c."configuration" -> 'variables' as variables
+from public.propertyconfigurations_s as c
+inner join my_var v on cast(v."data_reference_var" as uuid) = c."datareferenceid"
+where c."tt" is NULL and c."isdeleted" is false and (c."configuration" -> 'variables') is not null) as p), -- не удаленные и последней версии
+--select * fr om VARI
+
+PROPERTY (id, value, type_p) as
+(
+select distinct
+            p.id,
+            r.*
+from VARI as p
+join lateral jsonb_to_recordset(variables) as r("value" jsonb, "type" jsonb) on true),
+
+--select * from PROPERTY
+
+--получили все связи свойства с другими свойствами в формуле:
+PROPERTY_REF (id, ref_prod_id, type_p) as
+(select distinct id, replace(cast(value as varchar(100)),'"','') as ref_prod_id, type_p
+from PROPERTY
+where type_p = '"propertyId"') --- проверить ссылки на шаблоны свойств!!!! type_p = '"propertyPrimitiveId" для примера p.id = 'ca148408-1b49-8086-03a4-feadad0924a4' некоректно
+--select * from PROPERTY_REF
+
+select distinct e.id as property_id, e.ref_prod_id as reference_property_id, s.tt as tt_ref, s.isdeleted as isdeleted_ref_property, pp.tt as tt_prop, pp.isdeleted as isdeleted_prop, md.name as model, obj.path as path, pp.name as property_name  --, e.type_p, e.id as main_property_id, s.id as property_id, s."name" , s.isdeleted , s.tt
+from PROPERTY_REF as e
+left join public.properties_s as s on cast(e.ref_prod_id as uuid) = s.id and s."isdeleted" is true and s.tt is null
+left join public.properties_s as pp on e.id = pp.id
+left join public.objectspath_s as obj on pp.objectid = obj.id and obj.tt is null and obj.isdeleted is false
+left join public.modelsobjects_l as mdob on obj.id = mdob.objectid and mdob.tt is null and mdob.isdeleted is false
+left join public.models_s as md on mdob.modelid = md.id and md.tt is null and md.isdeleted is false
+where s.isdeleted is true and pp.tt is null and pp.isdeleted is false and md.name is not null
+order by path

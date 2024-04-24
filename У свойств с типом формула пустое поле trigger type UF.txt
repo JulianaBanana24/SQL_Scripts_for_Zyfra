@@ -1,0 +1,29 @@
+SELECT
+	MS.name as "Model_Name", OP.path as "Obj_path", PS.name as "Prop_Name",
+	PC.id as "Prop_Id", PC.datareferenceid as "Prop_datareferenceid",
+	PC.ts as "Prop_ts", PC.tt as "Prop_tt",
+	PC.isdeleted as "Prop_isdeleted", PC.configuration as "Prop_configuration",
+FROM
+    public.propertyconfigurations_s PC
+LEFT JOIN public.properties_s PS ON
+	PS.ID = PC.ID AND
+	PS.tt is null AND
+	PS.isdeleted=false
+LEFT JOIN public.objectspath_s OP ON
+	OP.ID = PS.objectid AND
+	OP.tt is null AND
+	OP.isdeleted=false
+LEFT JOIN public.modelsobjects_l MO ON
+	MO.objectid = PS.objectid AND
+	MO.tt is null AND
+	MO.isdeleted=false
+LEFT JOIN public.models_s MS ON
+	MS.ID = MO.modelid AND
+	MS.tt is null AND
+	MS.isdeleted=false
+WHERE
+    PC.tt is null
+    and PC.isdeleted=false
+    and PC.datareferenceId='065a9d19-259d-4293-93d2-9447e098e7b7'
+    and PC.configuration->'triggerType' is null
+    and PC.configuration->'expression' is not null;

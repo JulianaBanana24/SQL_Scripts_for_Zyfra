@@ -1,0 +1,24 @@
+SELECT
+	MS.name as "Model_Name", OP.path as "Obj_path", PS.name as "Prop_Name",
+	PC.id as "Prop_Id", PC.cnt as "Prop_Count"
+FROM (SELECT id, count(id) as cnt FROM public.propertyconfigurations_s
+		WHERE
+			isdeleted=false and tt is null
+		GROUP BY id) PC
+LEFT JOIN public.properties_s PS ON
+	PS.ID = PC.ID AND
+	PS.tt is null AND
+	PS.isdeleted=false
+LEFT JOIN public.objectspath_s OP ON
+	OP.ID = PS.objectid AND
+	OP.tt is null AND
+	OP.isdeleted=false
+LEFT JOIN public.modelsobjects_l MO ON
+	MO.objectid = PS.objectid AND
+	MO.tt is null AND
+	MO.isdeleted=false
+LEFT JOIN public.models_s MS ON
+	MS.ID = MO.modelid AND
+	MS.tt is null AND
+	MS.isdeleted=false
+WHERE PC.cnt >= 2

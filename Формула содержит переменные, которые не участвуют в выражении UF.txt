@@ -1,0 +1,85 @@
+with
+
+my_var(data_reference_var) as
+
+(values('065a9d19-259d-4293-93d2-9447e098e7b7')), ---формула
+
+ 
+
+VARI (id, variables, expression_prop) as
+
+(select distinct p."id" as Property_id, p."variables" as Property_variables, p.expression_prop as expression_prop 
+
+from
+
+(select
+
+             c."id" as id,
+
+             c."configuration" -> 'variables' as variables,
+
+             c."configuration" -> 'expression' as expression_prop
+
+from public.propertyconfigurations_s as c
+
+inner join my_var v on cast(v."data_reference_var" as uuid) = c."datareferenceid"
+
+where c."tt" is NULL and c."isdeleted" is false and (c."configuration" -> 'variables') is not null) as p), --– не удаленные и последней версии
+
+ 
+
+--select * from VARI
+
+ 
+
+PROPERTY (id, expression_prop, type_p, alias, value) as
+
+(
+
+select distinct
+
+             p.id,
+
+             p.expression_prop,
+
+             r.*
+
+from VARI as p
+
+join lateral jsonb_to_recordset(variables) as r("type" jsonb, "alias" jsonb, "value" jsonb) on true), 
+
+ 
+
+PROPERTY_FLAG (id, expression_prop, type_p, alias, value, flag_prop) as (
+
+select *,
+
+      case when
+
+             (replace(cast(p.expression_prop as varchar(1000)), '"', '') like '%'|| replace(cast(p.alias as varchar(1000)), '"', '') ||'%') OR
+
+             (cast(p.type_p as varchar(1000)) = '"tagName"' and cast(p.value as varchar(1000)) like '"SYS%') then 1 --– + уберем триггеры для запуска расчетов - системный тег
+
+      else 0 end as flag_prop  
+
+from PROPERTY as p)
+
+ 
+
+select distinct
+
+ w."name" as prop_name, o."name" as object_name, r."name", j."path"
+
+from PROPERTY_FLAG as p
+
+left join public."properties_s" as w on p."id" = w."id" and w."tt" is null and w."isdeleted" is false
+
+left join public."objects_s" as o on o."id"  = w."objectid" and o."tt" is NULL and o."isdeleted" is false
+
+left join public.objectspath_s as j on o."id" = j."id" and j."tt" is null and j."isdeleted" is false
+
+left join public.modelsobjects_l as d on o.id  = d.objectid and d.tt is null and d.isdeleted is false
+
+left join public.models_s as r on r.id  = d.modelid and r.tt is null and r.isdeleted is false
+
+where flag_prop = 0

@@ -1,0 +1,44 @@
+with
+
+my_var(data_reference_var) as
+
+(values('065a9d19-259d-4293-93d2-9447e098e7b7')) -- формула
+
+ 
+
+select distinct 
+
+             o."name" as object_name, j."path", c."id" as prop_id, p."name" as prop_name,
+
+             c."configuration"->'variables'  as variables,
+
+             c."configuration" -> 'expression' as expression_prop
+			 
+
+from public.propertyconfigurations_s as c
+
+inner join my_var v on cast(v."data_reference_var" as uuid) = c."datareferenceid"
+
+left join public."properties_s" as p on p."id" = c."id" and p."tt" is NULL
+
+left join public."objects_s" as o on o."id"  = p."objectid" and o."tt" is NULL
+
+left join public.objectspath_s as j on o."id" = j."id"
+
+where c."tt" is NULL and c."isdeleted" is false
+
+             and (
+
+                    (c."configuration" -> 'variables') is null
+
+                    or (c."configuration" -> 'variables') = '[]'
+
+                    or cast((c."configuration" -> 'variables') as varchar(2000)) not like '%alias%'
+
+                    or  (c."configuration" -> 'expression') is null
+
+                    or (c."configuration" -> 'expression')= '"0"'
+
+                    or (c."configuration" -> 'expression') = '""'
+
+             )

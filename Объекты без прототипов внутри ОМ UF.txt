@@ -1,0 +1,21 @@
+SELECT distinct 
+		MS.name as "Model_Name", OP.path as "Obj_path",
+		s."name" as "Obj_name", s."id" as "Obj_id",
+		s."objectprototypeid" as "Obj_objectprototypeid",
+		s."tt" as "Obj_tt", s."isdeleted" as "Obj_isdeleted",
+		s."description" as "Obj_description"
+FROM public.objects_s as s
+LEFT JOIN public.objectspath_s OP ON
+	OP.ID = s.id AND
+	OP.tt is null AND
+	OP.isdeleted=false
+LEFT JOIN public.modelsobjects_l MO ON
+	MO.objectid = s.id AND
+	MO.tt is null AND
+	MO.isdeleted=false
+LEFT JOIN public.models_s MS ON
+	MS.ID = MO.modelid AND
+	MS.tt is null AND
+	MS.isdeleted=false
+WHERE s."tt" is NULL and s."isdeleted" is false
+	and s."objectprototypeid" is null

@@ -1,0 +1,7 @@
+select   
+pps.id,mps.name prototype_name, pps."name", pps."code", pps.ts, pps.tt, pps.isdeleted -- детализация при использовании этой строчки закомментировать строки 2, 9 и 10
+from public.propertyprimitives_s as pps
+inner join propertyprimitives_h pph on pph.id=pps.id
+join modelprototypes_s mps on mps.id=pph.modelprototypeid
+where pps."tt" is null and pps."isdeleted" is false and (pps.code is null or char_length(pps.code) < 2)
+and mps.tt is null and mps.isdeleted is false

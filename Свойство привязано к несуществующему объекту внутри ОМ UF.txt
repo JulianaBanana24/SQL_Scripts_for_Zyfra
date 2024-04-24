@@ -1,0 +1,19 @@
+--select distinct(prop_propertyprimitiveid), count(prop_propertyprimitiveid) from (
+with 
+	active_prop (prop_id, prop_name, prop_objectid, prop_isdeleted, prop_propertyprimitiveid) as (
+		select p.id, p."name", p."objectid",  p."isdeleted", p."propertyprimitiveid"
+
+		from public.properties_s as p
+		where p."tt" is null and p."isdeleted" is false ), -- !!!!! ограничил для отработки количество свойств 
+	active_or_deleted_objects (object_id, object_name, object_isdeleted) as (
+		select o.id, o."name", o."isdeleted" 
+		from public."objects_s" as o
+		where o."tt" is null)
+
+select distinct
+		p.*, o.*
+from active_prop as p
+left join active_or_deleted_objects as o on o.object_id  = p.prop_objectid
+where o.object_id is null -- забираем те, которые не соединились активными ни с удаленными
+
+--) A group by 1
